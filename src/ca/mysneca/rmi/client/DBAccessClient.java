@@ -1,3 +1,8 @@
+/*****************************************************************************************
+ *  Student Names: Laurie Shields (034448142)
+ *                 Mark Lindan (063336143)
+ *  CJV805 - DBAccessClient.java
+ * **************************************************************************************/
 package ca.mysneca.rmi.client;
 
 import java.math.BigDecimal;

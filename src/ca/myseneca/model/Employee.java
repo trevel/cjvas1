@@ -1,3 +1,9 @@
+/*****************************************************************************************
+ *  Student Names: Laurie Shields (034448142)
+ *                 Mark Lindan (063336143)
+ *  CJV805 - Employee.java
+ *  		 Java Bean Class for the Employee records in the employees table
+ * **************************************************************************************/
 package ca.myseneca.model;
 
 import java.math.BigDecimal;

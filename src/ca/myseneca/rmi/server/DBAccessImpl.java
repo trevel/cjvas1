@@ -1,7 +1,11 @@
+/*****************************************************************************************
+ *  Student Names: Laurie Shields (034448142)
+ *                 Mark Lindan (063336143)
+ *  CJV805 - DBAccessImpl.java
+ * **************************************************************************************/
 package ca.myseneca.rmi.server;
 
 import java.util.ArrayList;
-
 import ca.myseneca.model.DBAccessHelper;
 import ca.myseneca.model.DBUtilities;
 import ca.myseneca.model.Employee;

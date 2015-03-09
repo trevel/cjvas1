@@ -1,9 +1,13 @@
+/*****************************************************************************************
+ *  Student Names: Laurie Shields (034448142)
+ *                 Mark Lindan (063336143)
+ *  CJV805 - DBAccessHelper.java
+ * **************************************************************************************/
 package ca.myseneca.model;
 
 import java.math.BigDecimal;
 import java.sql.*;
 import java.util.ArrayList;
-
 import oracle.jdbc.*;
 
 public final class DBAccessHelper {

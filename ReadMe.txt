@@ -7,9 +7,8 @@ manually or electronically from any other source (including web sites) or
 distributed to other students.
 
 Name(s) 		Student ID(s) 	Seneca LearnID(s)
-Laurie Shields
+Laurie Shields   034448142		llshields	
 --------------------------------------------------------------------------
-Mark Lindan
+Mark Lindan		 063336143		melindan
 --------------------------------------------------------------------------
 
-< the brief description of the assignment >

@@ -1,3 +1,8 @@
+/*****************************************************************************************
+ *  Student Names: Laurie Shields (034448142)
+ *                 Mark Lindan (063336143)
+ *  CJV805 - HRManagement.java
+ * **************************************************************************************/
 package ca.myseneca.test;
 
 import java.io.FileNotFoundException;
@@ -5,7 +10,6 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Scanner;
-
 import ca.myseneca.model.DBAccessHelper;
 import ca.myseneca.model.DBUtilities;
 import ca.myseneca.model.Employee;
