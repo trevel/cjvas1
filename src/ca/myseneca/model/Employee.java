@@ -17,8 +17,8 @@ public class Employee implements java.io.Serializable {
 	String phone_number;
 	java.sql.Date hire_date;
 	String job_id;
-	BigDecimal salary;
-	BigDecimal comm_pct;
+	BigDecimal salary = null;
+	BigDecimal comm_pct = null;
 	int manager_id;
 	int dept_id;
 	
@@ -166,8 +166,16 @@ public class Employee implements java.io.Serializable {
     	out += "Phone Number: " + this.getPhone_number() + "\n";
     	out += "Hire Date: " + this.getHire_date() + "\n";
     	out += "Job ID: " + this.getJob_id() + "\n";
-    	out += "Salary: " + this.getSalary().toString() + "\n";		    	
-    	out += "Commission %: " + this.getComm_pct().toString() + "\n";		    	
+    	if (this.getSalary() != null) {
+    		out += "Salary: $" + this.getSalary().toString() + "\n";	
+    	} else {
+    		out += "Salary: NULL \n";
+    	}
+    	if (this.getComm_pct() != null) {
+    		out += "Commission %: " + this.getComm_pct().toString() + "\n";		
+    	} else {
+    		out += "Commission %: NULL \n";
+    	}
     	out += "Manager ID: " + this.getManager_id() + "\n";		    	
     	out += "Department ID: " + this.getDept_id() + "\n";	
 		return out;

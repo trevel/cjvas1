@@ -5,7 +5,6 @@
  * **************************************************************************************/
 package ca.myseneca.model;
 
-import java.math.BigDecimal;
 import java.sql.*;
 import java.util.ArrayList;
 import oracle.jdbc.*;
@@ -13,14 +12,6 @@ import oracle.jdbc.*;
 public final class DBAccessHelper {
 
 	private static Connection conn = null;
-
-	/*private DBAccessHelper(Connection connection) {
-		conn = connection;
-	}
-*/
-	public static void setConn(Connection connection) {
-		conn = connection;
-	}
 
 	// All these method should handle SQLException and/or BatchUpdateException
 	// by printing out SQL state, error message, error code and etc. on error
@@ -35,7 +26,10 @@ public final class DBAccessHelper {
 		// You should call the PL/SQL function F_SECURITY in the P_SECURITY
 		// package; the method will return a 0 value for unauthorized user.
 		if (conn == null) {
-			return 0;
+			if ((conn = DBUtilities.getConnection()) == null) {
+				// couldn't get a connection
+				return 0;
+			}
 		}
 		try {
 			stmt = conn.prepareCall("{ ? = call cjv805_151a21.P_SECURITY.F_SECURITY( ?, ? ) }");
@@ -48,7 +42,6 @@ public final class DBAccessHelper {
 
 			// call the stored function
 			stmt.execute();
-			DBUtilities.printWarnings(stmt.getWarnings());
 			retVal = stmt.getInt(1);
 		} catch (SQLException e) {
 			DBUtilities.printSQLException(e);
@@ -71,14 +64,16 @@ public final class DBAccessHelper {
 		PreparedStatement stmt = null;
 		ResultSet rs = null;
 		if (conn == null) {
-			return null;
+			if ((conn = DBUtilities.getConnection()) == null) {
+				// couldn't get a connection
+				return null;
+			}
 		}
 
 		try {
 			tmpList = new ArrayList<Employee>();
 			stmt = conn.prepareStatement("SELECT employee_id, first_name, last_name, email, phone_number, hire_date, job_id, salary, commission_pct, manager_id, department_id FROM employees");
 			rs = stmt.executeQuery();
-			DBUtilities.printWarnings(stmt.getWarnings());
 			while (rs.next()) {
 				Employee emp = populateEmp(rs);
 				tmpList.add(emp);
@@ -103,14 +98,17 @@ public final class DBAccessHelper {
 		PreparedStatement stmt = null;
 		ResultSet rs = null;
 		if (conn == null) {
-			return null;
+			if ((conn = DBUtilities.getConnection()) == null) {
+				// couldn't get a connection
+				return null;
+			}
 		}
 		try {
 			tmpList = new ArrayList<Employee>();
-			stmt = conn.prepareStatement("SELECT employee_id, first_name, last_name, email, phone_number, hire_date, job_id, salary, commission_pct, manager_id, department_id FROM employees WHERE department_id=?");
+			stmt = conn
+					.prepareStatement("SELECT employee_id, first_name, last_name, email, phone_number, hire_date, job_id, salary, commission_pct, manager_id, department_id FROM employees WHERE department_id=?");
 			stmt.setInt(1, depid);
 			rs = stmt.executeQuery();
-			DBUtilities.printWarnings(stmt.getWarnings());
 			while (rs.next()) {
 				Employee emp = populateEmp(rs);
 				tmpList.add(emp);
@@ -130,14 +128,17 @@ public final class DBAccessHelper {
 		return tmpList;
 	}
 
+	// call the stored procedure P_EMP_INFO in the P_SECURITY package
 	public static Employee getEmployeeByID(int empid) {
 		OracleCallableStatement stmt = null;
 		OracleResultSet ors = null;
 		Employee emp = null;
-		// you should call the stored procedure P_EMP_INFO in the P_SECURITY
-		// package
+		
 		if (conn == null) {
-			return null;
+			if ((conn = DBUtilities.getConnection()) == null) {
+				// couldn't get a connection
+				return null;
+			}
 		}
 		try {
 			stmt = (OracleCallableStatement) conn.prepareCall("{call cjv805_151a21.P_SECURITY.P_EMP_INFO( ?, ? ) }");
@@ -147,7 +148,6 @@ public final class DBAccessHelper {
 																// second
 																// parameter
 			stmt.execute();
-			DBUtilities.printWarnings(stmt.getWarnings());
 			ors = (OracleResultSet) stmt.getCursor(2);
 			if (ors.next()) {
 				emp = populateEmp(ors);
@@ -171,13 +171,19 @@ public final class DBAccessHelper {
 		Statement stmt = null;
 		ResultSet rs = null;
 		String sqlQuery = "SELECT employee_id, first_name, last_name, email, phone_number, hire_date, job_id, salary, commission_pct, manager_id, department_id FROM employees";
-		if (conn == null || emp == null) {
+		if (emp == null) {
+			// employee object is null...nothing for us to do
 			return;
+		}
+		if (conn == null) {
+			if ((conn = DBUtilities.getConnection()) == null) {
+				// couldn't get a connection
+				return;
+			}
 		}
 		try {
 			stmt = conn.createStatement(ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE);
 			rs = stmt.executeQuery(sqlQuery);
-			DBUtilities.printWarnings(stmt.getWarnings());
 			if (rs.getConcurrency() == ResultSet.CONCUR_UPDATABLE) {
 				rs.moveToInsertRow();
 				rs.updateInt(1, emp.getEmployee_id());
@@ -187,16 +193,8 @@ public final class DBAccessHelper {
 				rs.updateString(5, emp.getPhone_number());
 				rs.updateDate(6, emp.getHire_date());
 				rs.updateString(7, emp.getJob_id());
-				if (emp.getSalary().compareTo(BigDecimal.ZERO) == 0) {
-					rs.updateBigDecimal(8, null);
-				} else {
-					rs.updateBigDecimal(8, emp.getSalary());
-				}
-				if (emp.getComm_pct().compareTo(BigDecimal.ZERO) == 0) {
-					rs.updateBigDecimal(9, null);
-				} else {
-					rs.updateBigDecimal(9, emp.getComm_pct());
-				}
+				rs.updateBigDecimal(8, emp.getSalary());
+				rs.updateBigDecimal(9, emp.getComm_pct());
 				rs.updateInt(10, emp.getManager_id());
 				rs.updateInt(11, emp.getDept_id());
 				rs.insertRow();
@@ -222,8 +220,15 @@ public final class DBAccessHelper {
 		PreparedStatement stmt = null;
 		ResultSet rs = null;
 		int retVal = 0;
-		if (conn == null || emp == null) {
+		if (emp == null) {
+			// employee object is null...not much more we can do
 			return 0;
+		}
+		if (conn == null){
+			if ((conn = DBUtilities.getConnection()) == null) {
+				// couldn't get a connection
+				return 0;
+			}
 		}
 		try {
 			stmt = conn.prepareStatement(
@@ -232,13 +237,42 @@ public final class DBAccessHelper {
 							ResultSet.CONCUR_UPDATABLE);
 			stmt.setInt(1, emp.getEmployee_id());
 			rs = stmt.executeQuery();
-			DBUtilities.printWarnings(stmt.getWarnings());
 			// Check the result set is an updatable result set
 			if (rs.getConcurrency() == ResultSet.CONCUR_UPDATABLE) {
 				rs.first();
-				rs.updateInt("DEPARTMENT_ID", 30);
+				// go through and update whatever has changed...can't change ID
+				if (rs.getString(2) != emp.getFirst_name()) {
+					rs.updateString(2, emp.getFirst_name());
+				}
+				if (rs.getString(3) != emp.getLast_name()) {
+					rs.updateString(3, emp.getLast_name());
+				}
+				if (rs.getString(4) != emp.getEmail()) {
+					rs.updateString(4, emp.getEmail());
+				}
+				if (rs.getString(5) != emp.getPhone_number()) {
+					rs.updateString(5, emp.getPhone_number());
+				}
+				if (rs.getDate(6) != emp.getHire_date()) {
+					rs.updateDate(6, emp.getHire_date());
+				}
+				if (rs.getString(7) != emp.getJob_id()) {
+					rs.updateString(7, emp.getJob_id());
+				}
+				if (rs.getBigDecimal(8) != emp.getSalary()) {
+					rs.updateBigDecimal(8, emp.getSalary());
+				}
+				if (rs.getBigDecimal(9) != emp.getComm_pct()) {
+					rs.updateBigDecimal(9, emp.getComm_pct());
+				}
+				if (rs.getInt(10) != emp.getManager_id()) {
+					rs.updateInt(10, emp.getManager_id());
+				}
+				if (rs.getInt(11) != emp.getDept_id()) {
+					rs.updateInt(11, emp.getDept_id());
+				}
 				rs.updateRow();
-				retVal = 1;
+				retVal = 1; // no return value from updateRow() call so just use 1
 			} else {
 				System.out.println("ResultSet is not an updatable result set.");
 			}
@@ -261,14 +295,15 @@ public final class DBAccessHelper {
 		int retVal = 0;
 		PreparedStatement stmt = null;
 		if (conn == null) {
-			return 0;
+			if ((conn = DBUtilities.getConnection()) == null) {
+				// couldn't get a connection
+				return 0;
+			}
 		}
 		try {
 			stmt = conn.prepareStatement("DELETE FROM employees WHERE employee_id=?");
 			stmt.setInt(1, empid);
-			DBUtilities.printWarnings(stmt.getWarnings());
 			retVal = stmt.executeUpdate();
-			DBUtilities.printWarnings(stmt.getWarnings());
 		} catch (SQLException e) {
 			DBUtilities.printSQLException(e);
 		} finally {
@@ -288,10 +323,43 @@ public final class DBAccessHelper {
 		// that either all updates are executed or none are. Any successful
 		// updates
 		// can be rolled back, in case of the update fail.
-		if (conn == null) {
+		Statement stmt = null;
+		boolean retVal = false;
+		if (SQLs.length == 0) {
+			// there were no statements to execute
 			return false;
 		}
-		return false;
+		if (conn == null) {
+			if ((conn = DBUtilities.getConnection()) == null) {
+				// couldn't get a connection
+				return false;
+			}
+		}
+		try {
+			stmt = conn.createStatement();
+			conn.setAutoCommit(false);
+			for (int i=0; i<SQLs.length; i++) {
+				stmt.addBatch(SQLs[i]);
+			}
+			int[] count = stmt.executeBatch();
+			conn.commit();
+			retVal = true;
+		} catch (BatchUpdateException b) {
+			DBUtilities.printBatchUpdateException(b);
+		} catch (SQLException ex) {
+			DBUtilities.printSQLException(ex);
+		} finally {
+			try {
+				conn.setAutoCommit(true);
+				if (stmt != null) {
+					stmt.close();
+				}
+			} catch (SQLException e) {
+				DBUtilities.printSQLException(e);
+			}
+
+		}
+		return retVal;
 	}
 
 	// helper method to convert from the result set into the Employee class
@@ -306,13 +374,7 @@ public final class DBAccessHelper {
 			emp.setHire_date(rs.getDate(6));
 			emp.setJob_id(rs.getString(7));
 			emp.setSalary(rs.getBigDecimal(8));
-			if (rs.wasNull()) {
-				emp.setSalary(BigDecimal.ZERO);
-			}
 			emp.setComm_pct(rs.getBigDecimal(9));
-			if (rs.wasNull()) {
-				emp.setComm_pct(BigDecimal.ZERO);
-			}
 			emp.setManager_id(rs.getInt(10));
 			emp.setDept_id(rs.getInt(11));
 			return emp;

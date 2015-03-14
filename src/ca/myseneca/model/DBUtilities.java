@@ -9,40 +9,37 @@ import java.io.*;
 import java.sql.*;
 import java.util.Properties;
 
-public class DBUtilities {
-	private Properties dbProps;
+public final class DBUtilities {
+	private static final String PROPERTY_FILE_NAME = "database.properties";
+	private static Properties dbProps = null;
 
-	public DBUtilities(String filePath) throws FileNotFoundException, IOException {
-		super();
-		this.setDbProps(filePath);
-	}
-
-	/**
-	 * @return the dbProps
-	 */
-	public Properties getDbProps() {
+	private static Properties getDbProps() {
 		return dbProps;
 	}
 
-	/**
-	 * @param dbProps the dbProps to set
-	 */
-	public void setDbProps(String filePath) throws FileNotFoundException, IOException, IllegalArgumentException  {
-		this.dbProps = new Properties();
-		FileInputStream fis = new FileInputStream(filePath);
-		this.dbProps.load(fis);
+	private static void loadDbProps() throws FileNotFoundException, IOException {
+		dbProps = new Properties();
+		FileInputStream fis = new FileInputStream(PROPERTY_FILE_NAME);
+		dbProps.load(fis);
 	}
 	
-	public Connection getConnection(String propName) {
+	public static Connection getConnection() {
 		Connection conn = null;
-		String driver = dbProps.getProperty("ORACLE_DB_DRIVER");
-        String connUrl = getDbProps().getProperty(propName);
-        Properties connProps = new Properties();
-		connProps.put("user", this.dbProps.getProperty("ORACLE_DB_USERNAME"));
-		connProps.put("password", this.dbProps.getProperty("ORACLE_DB_PASSWORD"));
 		try {
+			if (getDbProps() == null) {
+				loadDbProps();
+			}
+			String driver = getDbProps().getProperty("ORACLE_DB_DRIVER");
+	        String connUrl = getDbProps().getProperty("ORACLE_DB_CONN_URL");
+	        Properties connProps = new Properties();
+			connProps.put("user", getDbProps().getProperty("ORACLE_DB_USERNAME"));
+			connProps.put("password", getDbProps().getProperty("ORACLE_DB_PASSWORD"));
 			Class.forName(driver);
 			conn = DriverManager.getConnection(connUrl, connProps);
+		} catch (FileNotFoundException fnfex) {
+			System.err.println(PROPERTY_FILE_NAME + " file not found");
+		} catch (IOException ioex) {
+			System.err.println("Error loading " + PROPERTY_FILE_NAME);
 		} catch (ClassNotFoundException cnfex) {
             System.err.println("Failed to load JDBC/ODBC driver.");
         } catch (SQLException e) {
@@ -51,15 +48,7 @@ public class DBUtilities {
         }
 		return conn;
 	}
-	
-	public Connection getThinConnection() {
-		return getConnection("ORACLE_DB_URL_THIN");
-	}
-	
-	public Connection getOCIConnection() {
-		return getConnection("ORACLE_DB_URL_OCI");
-	}
-	
+		
 	public static void closeConnection(Connection conn) {
 		try {
 	        if (conn != null) {
@@ -114,7 +103,4 @@ public class DBUtilities {
 			System.err.print(updateCounts[i] + "   ");
 		}
 	}
-
-
-	
 }

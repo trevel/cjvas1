@@ -15,13 +15,6 @@ public class DBAccessImpl extends java.rmi.server.UnicastRemoteObject implements
 	
 	public DBAccessImpl() throws java.rmi.RemoteException {
 		super();
-		try {
-			myUtil= new DBUtilities("database.properties");
-			DBAccessHelper.setConn(myUtil.getOCIConnection());
-		} catch (Exception e) {
-			System.out.println("Something went wrong: " + e);
-			e.printStackTrace();
-		}
 	}
 	
 	public int getEmployeeID(String user, String password) throws java.rmi.RemoteException {
